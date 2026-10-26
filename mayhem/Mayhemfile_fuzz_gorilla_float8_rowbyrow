@@ -1,0 +1,9 @@
+project: savantenvs/timescaledb
+target: fuzz_gorilla_float8_rowbyrow
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_gorilla_float8_rowbyrow/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_gorilla_float8_rowbyrow
+    libfuzzer: true
+    timeout: 300

@@ -1,0 +1,9 @@
+project: savantenvs/timescaledb
+target: fuzz_aic_int2_bulk
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_aic_int2_bulk/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_aic_int2_bulk
+    libfuzzer: true
+    timeout: 300

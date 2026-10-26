@@ -1,0 +1,9 @@
+project: savantenvs/timescaledb
+target: fuzz_bool_bool_rowbyrow
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_bool_bool_rowbyrow/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_bool_bool_rowbyrow
+    libfuzzer: true
+    timeout: 300
