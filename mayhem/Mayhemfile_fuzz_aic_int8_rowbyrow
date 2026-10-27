@@ -7,3 +7,5 @@ cmds:
   - cmd: /mayhem/fuzz_aic_int8_rowbyrow
     libfuzzer: true
     timeout: 300
+    env:
+      MAYHEM_DIAG: "301"

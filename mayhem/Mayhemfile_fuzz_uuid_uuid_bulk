@@ -7,3 +7,5 @@ cmds:
   - cmd: /mayhem/fuzz_uuid_uuid_bulk
     libfuzzer: true
     timeout: 300
+    env:
+      MAYHEM_DIAG: "10"

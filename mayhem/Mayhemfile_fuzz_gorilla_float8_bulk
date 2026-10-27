@@ -7,3 +7,5 @@ cmds:
   - cmd: /mayhem/fuzz_gorilla_float8_bulk
     libfuzzer: true
     timeout: 300
+    env:
+      MAYHEM_DIAG: "202"

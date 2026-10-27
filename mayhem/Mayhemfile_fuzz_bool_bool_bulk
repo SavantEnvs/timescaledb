@@ -7,3 +7,5 @@ cmds:
   - cmd: /mayhem/fuzz_bool_bool_bulk
     libfuzzer: true
     timeout: 300
+    env:
+      MAYHEM_DIAG: "304"

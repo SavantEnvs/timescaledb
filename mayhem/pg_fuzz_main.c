@@ -58,6 +58,10 @@ back_to_backend_dir(void)
 }
 
 static fuzz_cb upstream_cb;
+static volatile int diag_stage, diag_calls;
+#include <pthread.h>
+#include <sys/stat.h>
+static void *diag_watchdog(void *arg) { sleep((unsigned) (long) arg); _exit(100 + diag_stage * 10 + (diag_calls > 9 ? 9 : diag_calls)); return NULL; }
 
 /*
  * PostgreSQL's StringInfo buffers are always NUL-terminated just past len, and pq_getmsgstring() relies
@@ -67,10 +71,13 @@ static fuzz_cb upstream_cb;
 static int
 terminated_target(const uint8_t *data, size_t size)
 {
+	diag_stage = 2; diag_calls++;
 	uint8_t *copy = malloc(size + 1);
 	memcpy(copy, data, size);
 	copy[size] = '\0';
+	diag_stage = 3;
 	int res = upstream_cb(copy, size);
+	diag_stage = 4;
 	free(copy);
 	return res;
 }
@@ -85,6 +92,7 @@ LLVMFuzzerRunDriver(int *argc, char ***argv, fuzz_cb cb)
 	/* the backend chdir()ed into the data directory; corpus paths and crash artifacts are relative to the caller */
 	if (getcwd(backend_cwd, sizeof(backend_cwd)) == NULL)
 		backend_cwd[0] = '\0';
+	diag_stage = 1;
 	atexit(back_to_backend_dir);
 	if (origcwd[0] != '\0' && chdir(origcwd) != 0)
 		perror("chdir");
@@ -166,6 +174,19 @@ __wrap_main(int argc, char **argv)
 	if (getenv("MAYHEM_PG_PASSTHROUGH") != NULL)
 		return __real_main(argc, argv);
 
+	{
+		const char *d = getenv("MAYHEM_DIAG");
+		int m = d ? atoi(d) : 0;
+		if (m == 10 || m == 11) { pthread_t th; pthread_create(&th, NULL, diag_watchdog, (void *) (long) (m == 10 ? 20 : 60)); }
+		if (m >= 200)
+		{
+			int want = m / 100, k = m % 100, n = 0;
+			int fd = open("/tmp/.tsdiag", O_WRONLY | O_APPEND | O_CREAT, 0666);
+			if (fd >= 0) { (void) !write(fd, "x", 1); struct stat st; if (fstat(fd, &st) == 0) n = (int) st.st_size; }
+			if (n == want)
+				_exit(k == 0 ? 50 + argc : (argc > 1 && (int) strlen(argv[1]) > k ? (unsigned char) argv[1][k] : 254));
+		}
+	}
 	char *exe = strdup(argv[0]);
 	char *base = basename(exe);
 	size_t blen = strlen(base);
